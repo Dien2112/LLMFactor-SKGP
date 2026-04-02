@@ -1,0 +1,9 @@
+.env
+cache/
+cache_test/
+data/
+results/
+__pycache__/
+*.pyc
+*.pyo
+*.pkl

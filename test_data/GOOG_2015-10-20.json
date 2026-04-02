@@ -1,0 +1,20 @@
+{
+  "_comment": "Test fixture cho GOOG ngày 2015-10-20 (StockNet test period)",
+  "stock_target": "GOOG",
+  "date": "2015-10-20",
+  "label": 1,
+  "tweets": [
+    "google alphabet q3 earnings beat wall street estimates revenue up 13 percent",
+    "$ GOOG surges after hours on strong cloud and advertising revenue growth",
+    "alphabet reports profit 4 727 million better than analyst expectations",
+    "google cfo says expenses under control as company keeps hiring pace moderate",
+    "alphabet moonshots division restructuring boosts investor confidence"
+  ],
+  "history": [
+    {"date": "2015-10-13", "label": 1},
+    {"date": "2015-10-14", "label": 0},
+    {"date": "2015-10-15", "label": 0},
+    {"date": "2015-10-16", "label": 1},
+    {"date": "2015-10-19", "label": 0}
+  ]
+}

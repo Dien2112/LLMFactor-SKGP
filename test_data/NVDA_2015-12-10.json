@@ -1,0 +1,20 @@
+{
+  "_comment": "Test fixture cho NVDA ngày 2015-12-10 (StockNet test period)",
+  "stock_target": "NVDA",
+  "date": "2015-12-10",
+  "label": 0,
+  "tweets": [
+    "Nvidia faces temporary setbacks in GPU sales in Asian markets",
+    "crypto mining demand slump heavily impacting $ NVDA short term revenue",
+    "new amd graphics cards putting pressure on nvidia market share",
+    "analyst warns of inventory pile up in channel distribution",
+    "macroeconomic headwinds cooling off tech sector enthusiasm"
+  ],
+  "history": [
+    {"date": "2015-12-03", "label": 0},
+    {"date": "2015-12-04", "label": 1},
+    {"date": "2015-12-07", "label": 0},
+    {"date": "2015-12-08", "label": 0},
+    {"date": "2015-12-09", "label": 0}
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "_comment": "Test fixture cho TSLA ngày 2015-12-01 (StockNet test period)",
+  "stock_target": "TSLA",
+  "date": "2015-12-01",
+  "label": 0,
+  "tweets": [
+    "Tesla misses Q3 delivery targets by a wide margin",
+    "concerns over $ TSLA production bottleneck for Model X",
+    "CEO Elon Musk warns of cash burn in upcoming quarters",
+    "analyst downgrades tesla stock due to valuation concerns",
+    "competition from traditional automakers heating up in EV space"
+  ],
+  "history": [
+    {"date": "2015-11-23", "label": 1},
+    {"date": "2015-11-24", "label": 0},
+    {"date": "2015-11-25", "label": 0},
+    {"date": "2015-11-27", "label": 1},
+    {"date": "2015-11-30", "label": 0}
+  ]
+}

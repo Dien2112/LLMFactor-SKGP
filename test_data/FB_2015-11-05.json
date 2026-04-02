@@ -1,0 +1,20 @@
+{
+  "_comment": "Test fixture cho FB ngày 2015-11-05 (StockNet test period)",
+  "stock_target": "FB",
+  "date": "2015-11-05",
+  "label": 1,
+  "tweets": [
+    "Facebook crushes earnings estimates largely driven by mobile ad revenue",
+    "$ FB daily active users cross unprecedented milestone",
+    "instagram monetization showing early signs of massive success",
+    "zuckerberg announces new VR initiatives for the social platform",
+    "wall street praises facebook continued growth despite market saturation fears"
+  ],
+  "history": [
+    {"date": "2015-10-29", "label": 1},
+    {"date": "2015-10-30", "label": 0},
+    {"date": "2015-11-02", "label": 1},
+    {"date": "2015-11-03", "label": 1},
+    {"date": "2015-11-04", "label": 1}
+  ]
+}
