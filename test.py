@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 
 from skgp import skgp, evaluate
+from llm.llm import llm as LLM
 
 logging.basicConfig(
     level=logging.INFO,
@@ -58,7 +59,7 @@ def load_fixtures(data_dir: Path = TEST_DATA_DIR) -> list[dict]:
     return fixtures
 
 
-def run_backtest(test_data: list[dict]) -> list[dict]:
+def run_backtest(test_data: list[dict], llm_instance: LLM) -> list[dict]:
     """
     Run skgp() on each fixture and compare against ground truth label.
 
@@ -83,6 +84,7 @@ def run_backtest(test_data: list[dict]) -> list[dict]:
             tweets=fix["tweets"],
             history=fix["history"],
             cache_dir=CACHE_DIR,
+            llm_instance=llm_instance,
         )
 
         pred    = result["pred"]
@@ -146,11 +148,20 @@ def main() -> None:
     if not fixtures:
         return
 
-    results = run_backtest(fixtures)
+    llm_instance = LLM()
+    results = run_backtest(fixtures, llm_instance)
 
     print_summary(results)
 
     evaluate(results)
+
+    # Print LLM usage stats
+    usage = llm_instance.manager.usage_summary()
+    print(f"  LLM Usage:")
+    print(f"    API calls   : {usage['api_calls']}")
+    print(f"    Cached calls: {usage['cached_calls']}")
+    print(f"    Total tokens: {usage['total_tokens']}")
+    print()
 
 
 

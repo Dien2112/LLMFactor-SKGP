@@ -22,7 +22,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.metrics import accuracy_score, matthews_corrcoef, confusion_matrix
 
-from llm.llm import llm
+from llm.llm import llm as LLM
 
 logger = logging.getLogger(__name__)
 
@@ -246,7 +246,7 @@ def find_stock_matches(tweets: list[str], target_ticker: str) -> list[str]:
 
 
 def step1_get_relation(
-    llm:           llm,
+    llm_instance:  LLM,
     target_ticker: str,
     match_ticker:  str,
     cache:         dict,
@@ -257,7 +257,7 @@ def step1_get_relation(
     """
     key = (target_ticker, match_ticker)
     if key in cache:
-        llm.cached_calls += 1
+        llm_instance.cached_calls += 1
         return cache[key]
 
     stock_info  = get_stock_info()
@@ -268,7 +268,7 @@ def step1_get_relation(
         f"Please fill in the blank and return a complete sentence: "
         f"{target_name} and {match_name} are most likely in a ___ relationship."
     )
-    response   = llm.generate(prompt)
+    response   = llm_instance.generate(prompt)
     cache[key] = response
     return response
 
@@ -278,11 +278,11 @@ def step1_get_relation(
 # ==============================================================================
 
 def step2_get_factors(
-    llm:    llm,
-    ticker: str,
-    date:   str,
-    tweets: list[str],
-    cache:  dict,
+    llm_instance: LLM,
+    ticker:       str,
+    date:         str,
+    tweets:       list[str],
+    cache:        dict,
 ) -> str:
     """
     Extract top-K price impact factors from news/tweets.
@@ -290,7 +290,7 @@ def step2_get_factors(
     """
     key = (ticker, date)
     if key in cache:
-        llm.cached_calls += 1
+        llm_instance.cached_calls += 1
         return cache[key]
 
     stock_info = get_stock_info()
@@ -301,7 +301,7 @@ def step2_get_factors(
         f"Please extract the top {K_FACTORS} factors that may affect the stock price "
         f"of {company} ({ticker}) from the following news:\n{news_text}"
     )
-    response   = llm.generate(prompt)
+    response   = llm_instance.generate(prompt)
     cache[key] = response
     return response
 
@@ -322,14 +322,58 @@ def _build_time_template(ticker: str, history: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _parse_prediction(raw: str) -> int:
+    """
+    Parse LLM response to determine rise (1) or fall (0).
+
+    The prompt asks LLM to "fill in the blank" with "will ___", so we
+    prioritise the LAST "will rise/fall" pattern (LLM conclusions come last).
+    Fallback: count rise vs fall keywords with negation awareness.
+    """
+    import re
+    text = raw.lower()
+
+    # ── Primary: last "will rise/fall" pattern (fill-in-the-blank answer) ──
+    will_matches = re.findall(
+        r"will\s+(rise|fall|decline|drop|decrease)", text,
+    )
+    if will_matches:
+        return 1 if will_matches[-1] == "rise" else 0
+
+    # ── Fallback: keyword scoring with negation ────────────────────────────
+    neg_rise = len(re.findall(
+        r"\b(?:not|no|unlikely to|won't|will not|cannot|doesn't|does not)\s+(?:\w+\s+){0,2}rise\b",
+        text,
+    ))
+    neg_fall = len(re.findall(
+        r"\b(?:not|no|unlikely to|won't|will not|cannot|doesn't|does not)\s+(?:\w+\s+){0,2}(?:fall|decline|drop|decrease)\b",
+        text,
+    ))
+
+    rise_kw = len(re.findall(r"\brise\b", text))
+    fall_kw = (len(re.findall(r"\bfall\b", text))
+               + len(re.findall(r"\bdecline\b", text))
+               + len(re.findall(r"\bdrop\b", text))
+               + len(re.findall(r"\bdecrease\b", text)))
+
+    rise_score = (rise_kw - neg_rise) + neg_fall
+    fall_score = (fall_kw - neg_fall) + neg_rise
+
+    if rise_score == fall_score:
+        # No clear signal — check raw for simple "rise" presence (paper's original logic)
+        return 1 if "rise" in text else 0
+
+    return 1 if rise_score > fall_score else 0
+
+
 def step3_get_prediction(
-    llm:       llm,
-    ticker:    str,
-    date:      str,
-    factors:   str,
-    relations: list[str],
-    history:   list[dict],
-    cache:     dict,
+    llm_instance: LLM,
+    ticker:       str,
+    date:         str,
+    factors:      str,
+    relations:    list[str],
+    history:      list[dict],
+    cache:        dict,
 ) -> tuple[int, str]:
     """
     Predict price trend (rise=1 / fall=0).
@@ -339,9 +383,9 @@ def step3_get_prediction(
     """
     key = (ticker, date)
     if key in cache:
-        llm.cached_calls += 1
+        llm_instance.cached_calls += 1
         raw  = cache[key]
-        pred = 1 if "rise" in raw.lower() else 0
+        pred = _parse_prediction(raw)
         return pred, raw
 
     stock_info    = get_stock_info()
@@ -363,9 +407,9 @@ def step3_get_prediction(
         f"{time_template}\n"
         f"On {date}, the stock price of {company} ({ticker}) will ___."
     )
-    raw        = llm.generate(prompt, use_strong_model=True)
+    raw        = llm_instance.generate(prompt, use_strong_model=True)
     cache[key] = raw
-    pred       = 1 if "rise" in raw.lower() else 0
+    pred       = _parse_prediction(raw)
     return pred, raw
 
 
@@ -379,6 +423,7 @@ def skgp(
     tweets:       list[str],
     history:      list[dict],
     cache_dir:    Path | None = None,
+    llm_instance: LLM | None = None,
 ) -> dict:
     """
     Run the full SKGP pipeline (Step 1->2->3) for 1 ticker, 1 date.
@@ -389,8 +434,8 @@ def skgp(
         tweets       : List of tweets/news for that date.
         history      : Price history of the last WINDOW_SIZE sessions.
                        Each element: {"date": "YYYY-MM-DD", "label": 0 or 1}.
-        llm          : GeminiLLM instance (if None, use the default global instance).
         cache_dir    : Cache directory (if None, uses ./cache).
+        llm_instance : LLM instance (if None, creates a new one).
 
     Returns:
         {
@@ -401,7 +446,8 @@ def skgp(
             "raw_response": str,             # raw output from Step 3
         }
     """
-    llm_instance = llm() 
+    if llm_instance is None:
+        llm_instance = LLM()
 
     _cache_dir = cache_dir or _DEFAULT_CACHE_DIR
     _cache_dir.mkdir(parents=True, exist_ok=True)
@@ -446,14 +492,17 @@ def skgp(
 # ==============================================================================
 
 def run_pipeline(
-    samples:   list[dict],
-    llm:       GeminiLLM,
-    cache_dir: Path = _DEFAULT_CACHE_DIR,
+    samples:      list[dict],
+    llm_instance: LLM | None = None,
+    cache_dir:    Path = _DEFAULT_CACHE_DIR,
 ) -> list[dict]:
     """
     Run SKGP pipeline on the full test sample list.
     Supports resume: caching skips API calls for previously processed samples.
     """
+    if llm_instance is None:
+        llm_instance = LLM()
+
     cache_dir.mkdir(parents=True, exist_ok=True)
     _DEFAULT_RESULT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -481,19 +530,19 @@ def run_pipeline(
         match_tickers = find_stock_matches(tweets, ticker)[:MAX_RELATIONS]
         relations: list[str] = []
         for mt in match_tickers:
-            rel = step1_get_relation(llm, ticker, mt, cache1)
+            rel = step1_get_relation(llm_instance, ticker, mt, cache1)
             relations.append(f"{ticker} & {mt}: {rel}")
         save_cache(cache1, cache_dir / _CACHE_STEP1)
         logger.info(f"  Step1: {len(relations)} relations")
 
         # Step 2
-        factors      = step2_get_factors(llm, ticker, date, tweets, cache2)
+        factors      = step2_get_factors(llm_instance, ticker, date, tweets, cache2)
         step2_cached = (ticker, date) in cache2
         save_cache(cache2, cache_dir / _CACHE_STEP2)
         logger.info(f"  Step2: factors extracted ({'cached' if step2_cached else 'new'})")
 
         # Step 3
-        pred, raw    = step3_get_prediction(llm, ticker, date, factors, relations, history, cache3)
+        pred, raw    = step3_get_prediction(llm_instance, ticker, date, factors, relations, history, cache3)
         step3_cached = (ticker, date) in cache3
         save_cache(cache3, cache_dir / _CACHE_STEP3)
 
@@ -501,7 +550,7 @@ def run_pipeline(
         logger.info(
             f"  Step3: pred={'rise' if pred == 1 else 'fall'} | "
             f"label={'rise' if label == 1 else 'fall'} | "
-            f"{'✓ CORRECT' if correct else '✗ WRONG'}"
+            f"{'CORRECT' if correct else 'WRONG'}"
         )
 
         results.append({
