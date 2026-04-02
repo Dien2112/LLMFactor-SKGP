@@ -1,8 +1,5 @@
-.env
 cache/
 data/
-results/
-crawler/
 __pycache__/
 *.pyc
 *.pyo

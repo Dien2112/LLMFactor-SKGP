@@ -36,10 +36,10 @@ _DEFAULT_CACHE_DIR  = Path("./cache")
 _DEFAULT_RESULT_DIR = Path("./results")
 
 # SKGP hyper-parameters (paper Section 4.4)
-WINDOW_SIZE   = 5    # number of historical price sessions to include in prompt
+WINDOW_SIZE   = 10   # number of historical price sessions to include in prompt
 K_FACTORS     = 5    # top-k factors to extract
-MAX_TWEETS    = 10   # maximum tweets embedded in prompt
-MAX_RELATIONS = 3    # maximum coin_match processed in Step 1 per sample
+MAX_TWEETS    = 30   # maximum tweets embedded in prompt
+MAX_RELATIONS = 10   # maximum coin_match processed in Step 1 per sample
 
 # Cache file names
 _CACHE_STEP1 = "step1_relation.pkl"
@@ -121,7 +121,8 @@ def find_coin_matches(tweets: list[str], target_ticker: str) -> list[str]:
     for ticker, info in coin_info.items():
         if ticker == target_ticker:
             continue
-        cashtag      = f"$ {ticker.lower()}"
+        # Match "$BTC", "$btc", plain ticker token, or full company name
+        cashtag      = f"${ticker.lower()}"
         company_name = info["company"].lower()
         if cashtag in combined or ticker.lower() in tokens or company_name in combined:
             found.append(ticker)
@@ -314,8 +315,12 @@ def skgp(
     cache2 = load_cache(cache2_path)
     cache3 = load_cache(cache3_path)
 
+    # Slice to configured maximums before processing
+    used_tweets  = tweets[:MAX_TWEETS]
+    used_history = history[-WINDOW_SIZE:]
+
     # -- Step 1: Relations ------------------------------------------------------
-    match_tickers = find_coin_matches(tweets, coin_target)[:MAX_RELATIONS]
+    match_tickers = find_coin_matches(used_tweets, coin_target)[:MAX_RELATIONS]
     relations: list[str] = []
     for mt in match_tickers:
         rel = step1_get_relation(llm_instance, coin_target, mt, cache1)
@@ -323,12 +328,13 @@ def skgp(
     save_cache(cache1, cache1_path)
 
     # -- Step 2: Factors --------------------------------------------------------
-    factors = step2_get_factors(llm_instance, coin_target, date, tweets, cache2)
+    factors = step2_get_factors(llm_instance, coin_target, date, used_tweets, cache2)
     save_cache(cache2, cache2_path)
 
     # -- Step 3: Prediction -----------------------------------------------------
+    # Pass only WINDOW_SIZE sessions so TimeTemplate is consistent with paper
     pred, raw = step3_get_prediction(
-        llm_instance, coin_target, date, factors, relations, history, cache3
+        llm_instance, coin_target, date, factors, relations, used_history, cache3
     )
     save_cache(cache3, cache3_path)
 
@@ -340,8 +346,8 @@ def skgp(
         "raw_response": raw,
         # Exact inputs consumed by this skgp() call — used for save_result()
         "_used_input": {
-            "tweets":  tweets[:MAX_TWEETS],   # actual text fed to Step 2/3
-            "history": history[-WINDOW_SIZE:], # actual sessions fed to Step 3
+            "tweets":  used_tweets,
+            "history": used_history,
         },
     }
 

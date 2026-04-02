@@ -15,8 +15,8 @@ from crawler_adapter import fetch_data_for_date
 def main():
     coin_target = "BTC"
     date        = datetime.date.today().isoformat()
-    news_limit = 15
-    history_window = 5
+    news_limit = 50          # fetch buffer; actual cap is MAX_TWEETS in skgp.py
+    history_window = 10      # must match WINDOW_SIZE in skgp.py
 
     print(f"\n{'='*60}")
     print(f"  MarketLens SKGP  |  {coin_target}  |  {date}")

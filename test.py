@@ -5,13 +5,13 @@ from crawler_adapter import fetch_data_for_date
 
 def main():
     coin_target    = "BTC"
-    news_limit     = 15
-    history_window = 5   # context sessions; +1 fetched below as ground truth
+    news_limit     = 100
+    history_window = 11# context sessions; +1 fetched below as ground truth
 
     records = []
 
-    for index in range(1, 10):
-        date = (datetime.date.today() - datetime.timedelta(days=index * 6)).isoformat()
+    for index in range(1, 16):
+        date = (datetime.date.today() - datetime.timedelta(days=index * history_window)).isoformat()
         print(f"\n{'='*60}")
         print(f"  {coin_target}  |  {date}")
         print(f"{'='*60}")

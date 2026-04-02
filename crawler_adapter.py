@@ -55,7 +55,7 @@ def _get_keywords(coin_target: str) -> list[str]:
 # ---------------------------------------------------------------------------
 # INTERNAL: Fetch news (RSS) filtered by coin & date
 # ---------------------------------------------------------------------------
-def _fetch_news(coin_target: str, date: str, limit: int = 15) -> list[str]:
+def _fetch_news(coin_target: str, date: str, limit: int) -> list[str]:
     """
     Fetch RSS news articles related to coin_target.
     When date is today: returns live feed.
@@ -104,7 +104,7 @@ def _fetch_news(coin_target: str, date: str, limit: int = 15) -> list[str]:
 # ---------------------------------------------------------------------------
 # INTERNAL: Fetch historical price data from CryptoCompare
 # ---------------------------------------------------------------------------
-def _fetch_price_history(coin_target: str, date: str, window: int = 5) -> list[dict]:
+def _fetch_price_history(coin_target: str, date: str, window: int) -> list[dict]:
     """
     Fetch 'window' days of price history BEFORE 'date' from CryptoCompare histoday API.
     Returns list of {date, label} dicts sorted oldest -> newest.
@@ -148,18 +148,6 @@ def _fetch_price_history(coin_target: str, date: str, window: int = 5) -> list[d
 # PUBLIC API
 # ---------------------------------------------------------------------------
 def fetch_data_for_date(coin_target: str, date: str, news_limit: int = 15, history_window: int = 5) -> tuple[list[str], list[dict]]:
-    """
-    Public entry point for main.py.
-
-    Args:
-        coin_target : e.g. "BTC", "ETH"
-        date        : "YYYY-MM-DD" — can be today or any past date
-
-    Returns:
-        (news, history)
-          news    : list[str]   up to 15 filtered news items
-          history : list[dict]  5 prior daily price sessions, oldest first
-    """
     logger.info(f"[Adapter] Fetching data for {coin_target} on {date}")
 
     news    = _fetch_news(coin_target, date, news_limit)
