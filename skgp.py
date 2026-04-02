@@ -39,7 +39,7 @@ _DEFAULT_RESULT_DIR = Path("./results")
 WINDOW_SIZE   = 10   # number of historical price sessions to include in prompt
 K_FACTORS     = 5    # top-k factors to extract
 MAX_TWEETS    = 30   # maximum tweets embedded in prompt
-MAX_RELATIONS = 10   # maximum coin_match processed in Step 1 per sample
+MAX_RELATIONS = 10  # maximum coin_match processed in Step 1 per sample
 
 # Cache file names
 _CACHE_STEP1 = "step1_relation.pkl"

@@ -10,7 +10,7 @@ def main():
 
     records = []
 
-    for index in range(1, 16):
+    for index in range(1, 51):
         date = (datetime.date.today() - datetime.timedelta(days=index * history_window)).isoformat()
         print(f"\n{'='*60}")
         print(f"  {coin_target}  |  {date}")
