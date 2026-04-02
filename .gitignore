@@ -4,6 +4,7 @@ cache_test/
 data/
 docs/
 results/
+crawler/
 __pycache__/
 *.pyc
 *.pyo
