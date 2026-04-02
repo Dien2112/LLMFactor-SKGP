@@ -1,6 +1,5 @@
 .env
 cache/
-cache_test/
 data/
 results/
 crawler/

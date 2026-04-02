@@ -1,0 +1,20 @@
+Layer 1	$BTC	Bitcoin
+Layer 1	$ETH	Ethereum
+Layer 1	$SOL	Solana
+Layer 1	$ADA	Cardano
+Layer 1	$AVAX	Avalanche
+Exchange	$BNB	Binance Coin
+Payment	$XRP	Ripple
+Oracle	$LINK	Chainlink
+Layer 2	$MATIC	Polygon
+Meme	$DOGE	Dogecoin
+Meme	$SHIB	Shiba Inu
+DeFi	$UNI	Uniswap
+DeFi	$AAVE	Aave
+DeFi	$MKR	Maker
+Stablecoin	$USDT	Tether
+Stablecoin	$USDC	USD Coin
+Smart Contract	$DOT	Polkadot
+Smart Contract	$ATOM	Cosmos
+Layer 2	$ARB	Arbitrum
+Layer 2	$OP	Optimism

@@ -57,12 +57,6 @@ STRONG_GEMINI_MODELS_CONFIG: list[dict] = [
         "tpm":      15_000,
         "rpd":      14_400,
     },
-    {
-        "id":       "gemini-2.5-pro",
-        "rpm":      10,
-        "tpm":      100_000,
-        "rpd":      500,
-    },
 ]
 
 
